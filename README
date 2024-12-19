@@ -1,0 +1,12 @@
+PURPOSE OF EACH SCREEN:
+For this project, the txts labeled "christmastree", "snowman", and "loading" are each the screens with the code. The story of the screens is that if you are locked, you cannot enter the house.
+Once, you unlock, you can enter the house and see the pretty christmas tree.
+
+Christmastree: unlock screen
+Snowman: Lock screen
+Loading: Just a rotating circle within a circular hollow bar
+
+HOW TO RUN:
+Step 1: Go to the txt that holds the display you want to see.
+Step 2: Copy the code in the txt (entire code) and paste it in main.cpp
+Step 3: Upload the main.cpp code to microcontroller and view the screen on the LCD 
