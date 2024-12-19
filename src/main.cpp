@@ -1,4 +1,4 @@
-//copy and paste from txt onto here
+//copy and paste from txt onto here, make sure main is empty before you paste
 #include <mbed.h>
 #include "drivers/LCD_DISCO_F429ZI.h" 
 
