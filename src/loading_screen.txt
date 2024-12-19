@@ -1,0 +1,74 @@
+#include <mbed.h>
+#include "drivers/LCD_DISCO_F429ZI.h" 
+
+#include <cmath>
+
+#define PI 3.14159
+
+int main() {
+    LCD_DISCO_F429ZI lcd;
+
+    // Clear the screen
+    lcd.Clear(LCD_COLOR_BLACK);
+
+    //Text
+    lcd.SetBackColor(LCD_COLOR_BLACK);
+    lcd.SetTextColor(LCD_COLOR_GRAY);
+    lcd.DisplayStringAt(0, 0, (uint8_t *)"Replicating Sequence!", LEFT_MODE);
+
+    uint16_t centerX = lcd.GetXSize() / 2;
+    uint16_t centerY = lcd.GetYSize() / 2;
+    uint16_t radius = 80;
+    uint16_t circle_size = 10;
+
+    //make the outline
+    for (int angle = 0; angle < 360; angle += 10) {
+            // Convert angle to radians
+            float rad = angle * PI / 180;
+
+            // Calculate end point of the line
+            uint16_t endX = centerX + radius * cos(rad);
+            uint16_t endY = centerY + radius * sin(rad);
+
+            lcd.FillCircle(endX, endY, circle_size+5);
+
+        }
+    //erase inner part of outline
+    lcd.SetTextColor(LCD_COLOR_BLACK);
+    for (int angle = 0; angle < 360; angle += 10) {
+            // Convert angle to radians
+            float rad = angle * PI / 180;
+
+            // Calculate end point of the line
+            uint16_t endX = centerX + radius * cos(rad);
+            uint16_t endY = centerY + radius * sin(rad);
+
+            lcd.FillCircle(endX, endY, circle_size);
+            }
+
+
+
+    while (1) {
+        for (int angle = 0; angle < 360; angle += 10) {
+            // Convert angle to radians
+            float rad = angle * PI / 180;
+
+            // Calculate end point of the line
+            uint16_t endX = centerX + radius * cos(rad);
+            uint16_t endY = centerY + radius * sin(rad);
+
+            // Draw the line
+            // lcd.FillTriangle(endX-15,endX,endX+15, endY, endY+15, endY); //upside down tri
+            // lcd.FillTriangle(endX-15,endX,endX+15, endY, endY-15, endY); //normal tri
+            lcd.FillCircle(endX, endY, circle_size-2);
+
+            thread_sleep_for(50);
+
+            // Erase the line for the next frame
+            lcd.SetTextColor(LCD_COLOR_BLACK);  // Set color to background color
+            lcd.FillCircle(endX, endY, circle_size);
+
+            lcd.SetTextColor(LCD_COLOR_LIGHTGRAY);  // Reset color to line color
+        }
+    }
+}

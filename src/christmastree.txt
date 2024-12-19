@@ -1,0 +1,86 @@
+#include <mbed.h>
+#include "drivers/LCD_DISCO_F429ZI.h" 
+
+const uint8_t spacing = 20; // Adjust spacing for characters
+#define PI 3.14159
+
+
+int main() {
+    // Initialize the LCD object
+    LCD_DISCO_F429ZI lcd;
+    
+    // Clear the screen
+    lcd.Clear(LCD_COLOR_BLACK);
+    //Text FOR UNLOCK
+    lcd.SetBackColor(LCD_COLOR_BLACK);
+    lcd.SetTextColor(LCD_COLOR_WHITE);
+    lcd.DisplayStringAt(0, 0, (uint8_t *)"Unlocked!", LEFT_MODE);
+
+    //Text FOR christmas message
+    lcd.DisplayStringAt(0, LINE(2), (uint8_t *)"Merry Christmas!", CENTER_MODE);
+
+    //log for tree (stump)
+    lcd.SetTextColor(LCD_COLOR_ORANGE);
+    lcd.FillRect(115, LINE(15), 10, 50);
+
+    //Floor or carpet
+    lcd.SetTextColor(LCD_COLOR_DARKRED);
+    lcd.FillRect(0, LINE(18), 236, 30);
+
+    //start of tree
+    lcd.SetTextColor(LCD_COLOR_DARKGREEN);
+    lcd.FillTriangle(70,120,170, LINE(16), LINE(10), LINE(16)); //bottom
+    lcd.FillTriangle(85,120,155, LINE(13), LINE(8), LINE(13)); //middle
+    lcd.FillTriangle(88,120,152, LINE(11), LINE(6), LINE(11)); //top
+
+    //star
+    lcd.SetTextColor(LCD_COLOR_LIGHTYELLOW);
+    lcd.FillTriangle(110,120,130, 85, 103, 85); //upside down tri
+    lcd.FillTriangle(110,120,130, LINE(6), LINE(5), LINE(6)); //normal tri
+
+    //lights on tree
+    //top half
+    lcd.FillCircle(127, LINE(10), 3);
+    lcd.FillCircle(113, LINE(8), 3);
+    //middle half
+    lcd.FillCircle(103, LINE(12), 3);
+    //low half
+    lcd.FillCircle(138, LINE(14), 3);
+    lcd.FillCircle(88, LINE(15), 3);
+
+
+    int count = 0;
+    //small cute animation for the LIGHTS
+    while(1){
+        count++;
+        if (count%2 == 0){
+            lcd.SetTextColor(LCD_COLOR_LIGHTYELLOW);
+            //top half
+            lcd.FillCircle(127, LINE(10), 3);
+            lcd.FillCircle(113, LINE(8), 3);
+            //middle half
+            lcd.FillCircle(103, LINE(12), 3);
+            //low half
+            lcd.FillCircle(138, LINE(14), 3);
+            lcd.FillCircle(88, LINE(15), 3);
+        }
+        else{
+            //top half
+            lcd.SetTextColor(LCD_COLOR_RED);
+            lcd.FillCircle(127, LINE(10), 3);
+            lcd.SetTextColor(LCD_COLOR_BLUE);
+            lcd.FillCircle(113, LINE(8), 3);
+            //middle half
+            lcd.SetTextColor(LCD_COLOR_MAGENTA);
+            lcd.FillCircle(103, LINE(12), 3);
+            //low half
+            lcd.SetTextColor(LCD_COLOR_BLUE);
+            lcd.FillCircle(138, LINE(14), 3);
+            lcd.SetTextColor(LCD_COLOR_RED);
+            lcd.FillCircle(88, LINE(15), 3);
+        }
+        thread_sleep_for(1600);
+
+    }
+
+}

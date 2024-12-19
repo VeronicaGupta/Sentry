@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"name": "Attempt_3",
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"string.h": "c",
+			"text_encoding": "c",
+			"typeinfo": "c",
+			"dirent.h": "c"
+		}
+	}
+}
