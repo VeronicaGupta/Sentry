@@ -1,20 +1,31 @@
-#ifndef GESTURE_RECORDER_H
-#define GESTURE_RECORDER_H
+#include "gesture_recorder.h"
+#include "stm32f4xx_hal.h"
+#include <string.h>
 
-#include "mpu6050.h"
+extern I2C_HandleTypeDef hi2c1;
 
-typedef struct {
-    float Gx, Gy, Gz;
-    float Ax, Ay, Az;
-} SensorData;
+GestureData record_gesture(int duration) {
+    GestureData gesture = { .length = 0 };
+    uint32_t start_time = HAL_GetTick();
 
-typedef struct {
-    SensorData data[100];
-    size_t length;
-} GestureData;
+    while ((HAL_GetTick() - start_time) < (duration * 1000)) {
+        SensorData data;
+        MPU6050_ReadGyro(&hi2c1, &data.Gx, &data.Gy, &data.Gz);
+        MPU6050_ReadAccel(&hi2c1, &data.Ax, &data.Ay, &data.Az);
+        gesture.data[gesture.length++] = data;
+        HAL_Delay(100);
+    }
 
-GestureData record_gesture(int duration);
-void save_gesture(const GestureData* gesture);
-GestureData load_gesture(void);
+    return gesture;
+}
 
-#endif
+void save_gesture(const GestureData* gesture) {
+    // Simulate saving to flash or external storage
+}
+
+GestureData load_gesture(void) {
+    // Simulate loading from flash or external storage
+    GestureData gesture;
+    memset(&gesture, 0, sizeof(gesture));
+    return gesture;
+}
