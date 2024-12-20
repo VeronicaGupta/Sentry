@@ -5,6 +5,7 @@
 
 // Window Size for Moving Average Window
 #define WINDOW_SIZE 10
+#define SAMPLE 10
 
 // Scaling
 #define DEG_TO_RAD (M_PI / 180.0f)
@@ -12,10 +13,18 @@
 #define SENSTIVITY 17.5*1000 // for 500 dps
 #define SCALING_FACTOR (SENSTIVITY * DEG_TO_RAD * MDPS_TO_DPS)
 
+const float SAMPLE_TIME = 0.05f; // 50ms sampling rate
+
 typedef struct {
     int16_t raw_x, raw_y, raw_z;
-    int16_t avg_x, avg_y, avg_z;
+    int32_t avg_x, avg_y, avg_z;
 } GestureData;
+
+typedef struct {
+    int avg_x[SAMPLE];
+    int avg_y[SAMPLE];
+    int avg_z[SAMPLE];
+} Gesture;
 
 #define CTRL_REG1 0x20
 #define CTRL_REG1_CONFIG 0b01'10'1'1'1'1
@@ -32,7 +41,9 @@ typedef struct {
 #define OUT_X_L 0x28
 
 int window_index = 0;
-int16_t window_x[WINDOW_SIZE], window_y[WINDOW_SIZE], window_z[WINDOW_SIZE] = {0};
+int32_t window_x[WINDOW_SIZE], window_y[WINDOW_SIZE], window_z[WINDOW_SIZE] = {0};
 
 extern GestureData gd={0}; 
+extern Gesture gd_saved = {0};
+extern Gesture gd_test = {0};
 #endif

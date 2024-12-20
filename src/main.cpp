@@ -3,8 +3,15 @@
 #include "filter.h"
 #include "spi_config.h"
 #include "lcd_out.h"
+#include "FATfilesystem.h"
+#include "LittleFileSystem.h"
+#include "BlockDevice.h"
 
 BufferedSerial pc(USBTX, USBRX, 9600);  // TX, RX, initial baud rate (default 9600)
+
+// Create a block device and filesystem instance
+BlockDevice *bd = BlockDevice::get_default_instance();
+LittleFileSystem fs("fs");
 
 // Callback function for SPI Transfer Completion
 void spi_cb(int event) {
@@ -43,16 +50,6 @@ void gyro_register_config(){
     write_buf[1] = 0xFF;
 }
 
-void gyro_get_data(){
-    write_buf[0] = OUT_X_L | 0x80 | 0x40;
-    spi.transfer(write_buf, 7, read_buf, 7, spi_cb);
-    flags.wait_all(SPI_FLAG);
-    
-    gd.raw_x = ((read_buf[2] << 8) | read_buf[1]);
-    gd.raw_y = ((read_buf[4] << 8) | read_buf[3]);
-    gd.raw_z = ((read_buf[6] << 8) | read_buf[5]);
-}
-
 void print_sensor_data(int16_t x, int16_t y, int16_t z){
     printf(">X axis-> gx: %d|g\n", x);
     printf(">Y axis-> gy: %d|g\n", y);
@@ -63,7 +60,7 @@ void print_sensor_data(int16_t x, int16_t y, int16_t z){
 void gyro_filtering(){
             
         //---shift all values in array to the left
-        for (int i = 1; i < WINDOW_SIZE; i++) {
+        for (int i = 0; i < WINDOW_SIZE; i++) {
             window_x[i-1] = window_x[i];
             window_y[i-1] = window_y[i];
             window_z[i-1] = window_z[i];
@@ -85,40 +82,177 @@ void gyro_filtering(){
         window_z[WINDOW_SIZE-1] = gd.raw_z;   
         gd.avg_z /= WINDOW_SIZE;
 
-        if (gd.avg_x<100){
+        if (abs(gd.avg_x)<50){
             gd.avg_x=0;
         }
 
-        if (gd.avg_y<100){
+        if (abs(gd.avg_y)<50){
             gd.avg_y=0;
         }
 
-        if (gd.avg_z<100){
+        if (abs(gd.avg_z)<50){
             gd.avg_z=0;
         }
 }
 
+void gyro_get_data(){
+    write_buf[0] = OUT_X_L | 0x80 | 0x40;
+    spi.transfer(write_buf, 7, read_buf, 7, spi_cb);
+    flags.wait_all(SPI_FLAG);
+    
+    gd.raw_x = ((read_buf[2] << 8) | read_buf[1]);
+    gd.raw_y = ((read_buf[4] << 8) | read_buf[3]);
+    gd.raw_z = ((read_buf[6] << 8) | read_buf[5]);
+
+    gyro_filtering();
+
+    // print_sensor_data(gd.avg_x, gd.avg_y, gd.avg_z);
+
+}
+
+void read_gesture_data(const char* filename) {
+    FILE *file = fopen(filename, "r");
+    if (!file) {
+        printf("Error opening file: %s\n", strerror(errno));
+        return;
+    }
+
+    char buffer[1024]; // Ensure buffer size is large enough for your data
+    size_t read_size = fread(buffer, 1, sizeof(buffer) - 1, file);
+    if (read_size == 0) {
+        printf("Error reading file or file is empty\n");
+        fclose(file);
+        return;
+    }
+    buffer[read_size] = '\0'; // Null-terminate the buffer
+    fclose(file);
+
+    // Parse JSON data
+    char* ptr = buffer;
+    for (int i = 0; i < SAMPLE; i++) {
+        int x, y, z;
+        if (sscanf(ptr, "{%ld, %ld, %ld}", &x, &y, &z) == 3) {
+            gd_saved.avg_x[i] = x;
+            gd_saved.avg_y[i] = y;
+            gd_saved.avg_z[i] = z;
+
+            printf("Parsed Point %d: X=%d, Y=%d, Z=%d\n", i, gd_saved.avg_x[i], gd_saved.avg_y[i], gd_saved.avg_z[i]);
+
+            // Move pointer forward to the next data point
+            ptr = strchr(ptr, '}');
+            if (ptr) {
+                ptr++; // Move past the closing brace
+            }
+        } else {
+            printf("Error parsing JSON data at index %d\n", i);
+            break;
+        }
+    }
+}
+
+EventQueue queue(32 * EVENTS_EVENT_SIZE);
+EventQueue queue1(32 * EVENTS_EVENT_SIZE);
+Thread event_thread, event_thread1;
+
+void record_data_task();
+void button_press_record_handler() {
+    queue.call(record_data_task);
+}
+
+void unlock_data_task(){
+    display_christmas_tree("unlock_data_task started..");
+}
+
+
+void button_press_unlock_handler() {
+    queue1.call(unlock_data_task);
+}
+
+void record_data_task() {
+    // Perform file operations and data recording here
+    int count=0;
+    // Check if file exists
+    if (FILE* file = fopen(filename, "r")) {
+        fclose(file);
+        // File exists, so remove it
+        if (remove(filename) != 0) {
+            printf("Error deleting existing file\n");
+            return;
+        }
+    }
+    // Create new file
+    FILE* file = fopen(filename, "w+");
+    if (!file) {
+        printf("Error creating config file: %s\n", strerror(errno));
+        return;
+    }
+    fprintf(file, "[");
+    display_loading_screen("Gesture Recording..");
+    while (count < SAMPLE){        
+        if (file != NULL) {
+            fprintf(file, "{%ld, %ld, %ld}", gd.avg_x, gd.avg_y, gd.avg_z);
+            printf("Recording Point %d: X=%ld, Y=%ld, Z=%ld\n", count, gd.avg_x, gd.avg_y, gd.avg_z);
+            if (count != SAMPLE-1) {  // Add a comma except for the last item
+                fprintf(file, ",");
+            }
+            count++;
+        } else {
+            printf("Error writing in file: %s\n", strerror(errno));
+        }
+        ThisThread::sleep_for(10ms);
+    }
+    fprintf(file, "]");
+    fclose(file);
+    read_gesture_data(filename);
+    
+    for (int i = 0; i < SAMPLE; i++) {
+        printf("Point %d: X=%d, Y=%d, Z=%d\n", 
+        i, gd_saved.avg_x[i], gd_saved.avg_y[i], gd_saved.avg_z[i]);
+    }
+    display_snowman("Recorded!,Unlock Now..");
+
+    button.rise(&button_press_unlock_handler); // unlock button
+    event_thread1.start(callback(&queue1, &EventQueue::dispatch_forever));
+
+    return;
+}
+
 int main() {
-    // Interrupt
-    InterruptIn int2(PA_2, PullDown);
-    int2.rise(&data_cb);
+    int2.rise(&data_cb); // gyro sensor
+    button.rise(&button_press_record_handler); // record button
+    event_thread.start(callback(&queue, &EventQueue::dispatch_forever));
 
     setup_spi();
-
     gyro_register_config();
+    gyro_get_data();
+
+    // Mount the filesystem
+    int err = fs.mount(bd);
+    if (err) {
+        // If mounting fails, format and mount again
+        printf("Formatting the filesystem...\n");
+        err = fs.format(bd);
+        if (err) {
+            printf("Filesystem format failed\n");
+            return -1;
+        }
+        err = fs.mount(bd);
+        if (err) {
+            printf("Filesystem mount failed\n");
+            return -1;
+        }
+    }
+
+    display_snowman("Press Blue button");
 
     while (1) {
         flags.wait_all(DATA_READY_FLAG, 0xFF, true);
-        
+
         gyro_get_data();
-        gyro_filtering();
 
-        print_sensor_data(gd.avg_x, gd.avg_y, gd.avg_z);
-
-        display_snowman();
-        thread_sleep_for(5000); // Wait 5 seconds
-        display_christmas_tree();
-        thread_sleep_for(5000); // Wait 5 seconds
-        display_loading_screen(); // Continuous animation
+        thread_sleep_for(100);
     }
+
+    fs.unmount();
+    return 0;
 }

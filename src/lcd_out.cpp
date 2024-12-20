@@ -6,11 +6,11 @@ LCD_DISCO_F429ZI lcd;
 /**
  * @brief Displays a snowman on the screen.
  */
-void display_snowman() {
+void display_snowman(char *text) {
     lcd.Clear(LCD_COLOR_BLACK);
     lcd.SetBackColor(LCD_COLOR_BLACK);
     lcd.SetTextColor(LCD_COLOR_LIGHTGRAY);
-    lcd.DisplayStringAt(0, 0, (uint8_t *)"Locked!", LEFT_MODE);
+    lcd.DisplayStringAt(0, 0, (uint8_t *)text, LEFT_MODE);
 
     // Snow
     lcd.FillRect(0, LINE(18), 236, 30);
@@ -49,11 +49,11 @@ void display_snowman() {
 /**
  * @brief Displays a Christmas tree on the screen.
  */
-void display_christmas_tree() {
+void display_christmas_tree(char *text) {
     lcd.Clear(LCD_COLOR_BLACK);
     lcd.SetBackColor(LCD_COLOR_BLACK);
     lcd.SetTextColor(LCD_COLOR_WHITE);
-    lcd.DisplayStringAt(0, 0, (uint8_t *)"Unlocked!", LEFT_MODE);
+    lcd.DisplayStringAt(0, 0, (uint8_t *)text, LEFT_MODE);
     lcd.DisplayStringAt(0, LINE(2), (uint8_t *)"Merry Christmas!", CENTER_MODE);
 
     // Log (stump)
@@ -88,11 +88,11 @@ void display_christmas_tree() {
 /**
  * @brief Displays a loading animation on the screen.
  */
-void display_loading_screen() {
+void display_loading_screen(char *text) {
     lcd.Clear(LCD_COLOR_BLACK);
     lcd.SetBackColor(LCD_COLOR_BLACK);
     lcd.SetTextColor(LCD_COLOR_GRAY);
-    lcd.DisplayStringAt(0, 0, (uint8_t *)"Loading...", LEFT_MODE);
+    lcd.DisplayStringAt(0, 0, (uint8_t *)text, LEFT_MODE);
 
     uint16_t centerX = lcd.GetXSize() / 2;
     uint16_t centerY = lcd.GetYSize() / 2;
@@ -118,7 +118,7 @@ void display_loading_screen() {
     }
 
     // Animation
-    while (1) {
+    // while (1) {
         for (int angle = 0; angle < 360; angle += 10) {
             float rad = angle * M_PI / 180;
             uint16_t endX = centerX + radius * cos(rad);
@@ -129,5 +129,5 @@ void display_loading_screen() {
             lcd.SetTextColor(LCD_COLOR_BLACK);
             lcd.FillCircle(endX, endY, circle_size);
         }
-    }
+    // }
 }
