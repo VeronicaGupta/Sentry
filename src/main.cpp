@@ -129,7 +129,7 @@ int main() {
             avg_gx += window_gx[i];//adding values to the average sum
         }
         avg_gx += raw_gx;//adding extra current reading
-        window_gx[WINDOW_SIZE-1] = raw_gx;    //placed reading in last spot of array
+        window_gx[WINDOW_SIZE-1] = raw_gx;    //placed current reading in last spot of array
         avg_gx /= WINDOW_SIZE;//average value calculated
 
 
