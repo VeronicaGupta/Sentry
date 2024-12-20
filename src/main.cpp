@@ -2,6 +2,7 @@
 #include "gyro.h"
 #include "filter.h"
 #include "spi_config.h"
+#include "lcd_out.h"
 
 BufferedSerial pc(USBTX, USBRX, 9600);  // TX, RX, initial baud rate (default 9600)
 
@@ -84,7 +85,17 @@ void gyro_filtering(){
         window_z[WINDOW_SIZE-1] = gd.raw_z;   
         gd.avg_z /= WINDOW_SIZE;
 
-        print_sensor_data(gd.avg_x, gd.avg_y, gd.avg_z);
+        if (gd.avg_x<100){
+            gd.avg_x=0;
+        }
+
+        if (gd.avg_y<100){
+            gd.avg_y=0;
+        }
+
+        if (gd.avg_z<100){
+            gd.avg_z=0;
+        }
 }
 
 int main() {
@@ -101,5 +112,13 @@ int main() {
         
         gyro_get_data();
         gyro_filtering();
+
+        print_sensor_data(gd.avg_x, gd.avg_y, gd.avg_z);
+
+        display_snowman();
+        thread_sleep_for(5000); // Wait 5 seconds
+        display_christmas_tree();
+        thread_sleep_for(5000); // Wait 5 seconds
+        display_loading_screen(); // Continuous animation
     }
 }
