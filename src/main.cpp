@@ -1,39 +1,9 @@
 #include <mbed.h>
+#include "gyro.h"
+#include "filter.h"
+#include "spi_config.h"
 
-//NOTE: The gyroscope is next to the LCD screen.
-
-const uint8_t spacing = 20; // Adjust spacing for characters
-#define PI 3.14159
-
-#define CTRL_REG1 0x20
-#define CTRL_REG1_CONFIG 0b01'10'1'1'1'1
-
-// Control Register 4
-#define CTRL_REG4 0x23
-#define CTRL_REG4_CONFIG 0b0'0'01'0'00'0
-
-// Control Register 3
-#define CTRL_REG3 0x22
-#define CTRL_REG3_CONFIG 0b0'0'0'0'1'000
-
-// Output Register --> X axis
-#define OUT_X_L 0x28
-
-// Define Flag bits for the EventFlags object
-#define SPI_FLAG 1
-#define DATA_READY_FLAG 2
-
-// Window Size for Moving Average Window
-#define WINDOW_SIZE 10
-
-// EventFlags Object Declaration
-EventFlags flags;
-
-// SPI
-SPI spi(PF_9, PF_8, PF_7, PC_1, use_gpio_ssel);
-uint8_t write_buf[32], read_buf[32];
-    
-
+BufferedSerial pc(USBTX, USBRX, 9600);  // TX, RX, initial baud rate (default 9600)
 
 // Callback function for SPI Transfer Completion
 void spi_cb(int event) {
@@ -44,11 +14,6 @@ void spi_cb(int event) {
 void data_cb() {
     flags.set(DATA_READY_FLAG);
 }
-
-int16_t raw_gx, raw_gy, raw_gz; // raw gyro values
-float gx, gy, gz; // converted gyro values
-int16_t window_gx[WINDOW_SIZE] = {0}, window_gy[WINDOW_SIZE] = {0}, window_gz[WINDOW_SIZE] = {0};
-int window_index = 0;
 
 void setup_spi(){
     spi.format(8, 3);
@@ -82,9 +47,9 @@ void gyro_get_data(){
     spi.transfer(write_buf, 7, read_buf, 7, spi_cb);
     flags.wait_all(SPI_FLAG);
     
-    raw_gx = (read_buf[2] << 8) | read_buf[1];
-    raw_gy = (read_buf[4] << 8) | read_buf[3];
-    raw_gz = (read_buf[6] << 8) | read_buf[5];
+    gd.raw_x = ((read_buf[2] << 8) | read_buf[1]);
+    gd.raw_y = ((read_buf[4] << 8) | read_buf[3]);
+    gd.raw_z = ((read_buf[6] << 8) | read_buf[5]);
 }
 
 void print_sensor_data(int16_t x, int16_t y, int16_t z){
@@ -95,22 +60,31 @@ void print_sensor_data(int16_t x, int16_t y, int16_t z){
 }
 
 void gyro_filtering(){
-        int32_t avg_gx = 0, avg_gy = 0, avg_gz = 0;
             
         //---shift all values in array to the left
         for (int i = 1; i < WINDOW_SIZE; i++) {
-            window_gx[i-1] = window_gx[i];
-            avg_gx += window_gx[i];//adding values to the average sum
-        }
-        avg_gx += raw_gx;//adding extra current reading
-        window_gx[WINDOW_SIZE-1] = raw_gx;    //placed current reading in last spot of array
-        avg_gx /= WINDOW_SIZE;//average value calculated
+            window_x[i-1] = window_x[i];
+            window_y[i-1] = window_y[i];
+            window_z[i-1] = window_z[i];
 
-        for(int j = 0; j < 10; j++){
-             printf("%d\n", window_gx[j]);
+            gd.avg_x += window_x[i];
+            gd.avg_y += window_y[i];
+            gd.avg_z += window_z[i];
         }
 
-        print_sensor_data(avg_gx, avg_gy, avg_gz);
+        gd.avg_x += gd.raw_x;
+        window_x[WINDOW_SIZE-1] = gd.raw_x;   
+        gd.avg_x /= WINDOW_SIZE;
+
+        gd.avg_y += gd.raw_y;
+        window_y[WINDOW_SIZE-1] = gd.raw_y;   
+        gd.avg_y /= WINDOW_SIZE;
+
+        gd.avg_z += gd.raw_z;
+        window_z[WINDOW_SIZE-1] = gd.raw_z;   
+        gd.avg_z /= WINDOW_SIZE;
+
+        print_sensor_data(gd.avg_x, gd.avg_y, gd.avg_z);
 }
 
 int main() {
