@@ -117,7 +117,7 @@ void read_gesture_data(const char* filename) {
         return;
     }
 
-    char buffer[1024]; // Ensure buffer size is large enough for your data
+    char buffer[2048]; // Ensure buffer size is large enough for your data
     size_t read_size = fread(buffer, 1, sizeof(buffer) - 1, file);
     if (read_size == 0) {
         printf("Error reading file or file is empty\n");
@@ -129,9 +129,25 @@ void read_gesture_data(const char* filename) {
 
     // Parse JSON data
     char* ptr = buffer;
+
+    // Skip the opening '['
+    ptr = strchr(ptr, '[');
+    if (!ptr) {
+        printf("Error: Invalid JSON format\n");
+        return;
+    }
+    ptr++;
+
     for (int i = 0; i < SAMPLE; i++) {
         int x, y, z;
-        if (sscanf(ptr, "{%ld, %ld, %ld}", &x, &y, &z) == 3) {
+        
+        // Skip spaces and newlines
+        while (*ptr == '\n' || *ptr == ' ' || *ptr == ',') {
+            ptr++;
+        }
+
+        // Parse the object
+        if (sscanf(ptr, "{\"x\": %d, \"y\": %d, \"z\": %d}", &x, &y, &z) == 3) {
             gd_saved.avg_x[i] = x;
             gd_saved.avg_y[i] = y;
             gd_saved.avg_z[i] = z;
@@ -150,6 +166,7 @@ void read_gesture_data(const char* filename) {
     }
 }
 
+
 EventQueue queue(32 * EVENTS_EVENT_SIZE);
 EventQueue queue1(32 * EVENTS_EVENT_SIZE);
 Thread event_thread, event_thread1;
@@ -160,7 +177,7 @@ void button_press_record_handler() {
 }
 
 void unlock_data_task(){
-    display_christmas_tree("unlock_data_task started..");
+    display_snowman("Test Gesture..");
 }
 
 
@@ -186,11 +203,11 @@ void record_data_task() {
         printf("Error creating config file: %s\n", strerror(errno));
         return;
     }
-    fprintf(file, "[");
+    fprintf(file, "[\n");
     display_loading_screen("Gesture Recording..");
     while (count < SAMPLE){        
         if (file != NULL) {
-            fprintf(file, "{%ld, %ld, %ld}", gd.avg_x, gd.avg_y, gd.avg_z);
+            fprintf(file, "    {\"x\": %ld, \"y\": %ld, \"z\": %ld}", gd.avg_x, gd.avg_y, gd.avg_z);
             printf("Recording Point %d: X=%ld, Y=%ld, Z=%ld\n", count, gd.avg_x, gd.avg_y, gd.avg_z);
             if (count != SAMPLE-1) {  // Add a comma except for the last item
                 fprintf(file, ",");
@@ -201,7 +218,7 @@ void record_data_task() {
         }
         ThisThread::sleep_for(10ms);
     }
-    fprintf(file, "]");
+    fprintf(file, "\n]");
     fclose(file);
     read_gesture_data(filename);
     
