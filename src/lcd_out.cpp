@@ -49,12 +49,12 @@ void display_snowman(char *text) {
 /**
  * @brief Displays a Christmas tree on the screen.
  */
-void display_christmas_tree(char *text) {
+void display_christmas_tree(char *text, char *text2) {
     lcd.Clear(LCD_COLOR_BLACK);
     lcd.SetBackColor(LCD_COLOR_BLACK);
     lcd.SetTextColor(LCD_COLOR_WHITE);
     lcd.DisplayStringAt(0, 0, (uint8_t *)text, LEFT_MODE);
-    lcd.DisplayStringAt(0, LINE(2), (uint8_t *)"Merry Christmas!", CENTER_MODE);
+    lcd.DisplayStringAt(0, LINE(2), (uint8_t *)text2, CENTER_MODE);
 
     // Log (stump)
     lcd.SetTextColor(LCD_COLOR_ORANGE);

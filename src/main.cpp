@@ -110,7 +110,7 @@ void gyro_get_data(){
 
 }
 
-void read_gesture_data(const char* filename) {
+void read_gesture_record_data() {
     FILE *file = fopen(filename, "r");
     if (!file) {
         printf("Error opening file: %s\n", strerror(errno));
@@ -152,7 +152,63 @@ void read_gesture_data(const char* filename) {
             gd_saved.avg_y[i] = y;
             gd_saved.avg_z[i] = z;
 
-            printf("Parsed Point %d: X=%d, Y=%d, Z=%d\n", i, gd_saved.avg_x[i], gd_saved.avg_y[i], gd_saved.avg_z[i]);
+            printf("KEY Parsed Sequence %d: X=%d, Y=%d, Z=%d\n", i, gd_saved.avg_x[i], gd_saved.avg_y[i], gd_saved.avg_z[i]);
+
+            // Move pointer forward to the next data point
+            ptr = strchr(ptr, '}');
+            if (ptr) {
+                ptr++; // Move past the closing brace
+            }
+        } else {
+            printf("Error parsing JSON data at index %d\n", i);
+            break;
+        }
+    }
+}
+
+void read_gesture_test_data() {
+    FILE *file = fopen(filename_test, "r");
+    if (!file) {
+        printf("Error opening file: %s\n", strerror(errno));
+        return;
+    }
+
+    char buffer[2048]; // Ensure buffer size is large enough for your data
+    size_t read_size = fread(buffer, 1, sizeof(buffer) - 1, file);
+    if (read_size == 0) {
+        printf("Error reading file or file is empty\n");
+        fclose(file);
+        return;
+    }
+    buffer[read_size] = '\0'; // Null-terminate the buffer
+    fclose(file);
+
+    // Parse JSON data
+    char* ptr = buffer;
+
+    // Skip the opening '['
+    ptr = strchr(ptr, '[');
+    if (!ptr) {
+        printf("Error: Invalid JSON format\n");
+        return;
+    }
+    ptr++;
+
+    for (int i = 0; i < SAMPLE; i++) {
+        int x, y, z;
+        
+        // Skip spaces and newlines
+        while (*ptr == '\n' || *ptr == ' ' || *ptr == ',') {
+            ptr++;
+        }
+
+        // Parse the object
+        if (sscanf(ptr, "{\"x\": %d, \"y\": %d, \"z\": %d}", &x, &y, &z) == 3) {
+            gd_test.avg_x[i] = x;
+            gd_test.avg_y[i] = y;
+            gd_test.avg_z[i] = z;
+
+            printf("TEST Parsed Point %d: X=%d, Y=%d, Z=%d\n", i, gd_test.avg_x[i], gd_test.avg_y[i], gd_test.avg_z[i]);
 
             // Move pointer forward to the next data point
             ptr = strchr(ptr, '}');
@@ -176,8 +232,73 @@ void button_press_record_handler() {
     queue.call(record_data_task);
 }
 
+int get_match(){
+    read_gesture_record_data();
+    read_gesture_test_data();
+
+    ThisThread::sleep_for(2s);
+
+    display_christmas_tree("Retrived gestures", "Matching..");
+
+    ThisThread::sleep_for(2s);
+
+    // Add reconition code here
+
+    return 1;
+
+}
+
 void unlock_data_task(){
-    display_snowman("Test Gesture..");
+    display_snowman("Record Test Sequence..");
+
+    // Perform file operations and data recording here
+    int count=0;
+    // Check if file exists
+    if (FILE* file = fopen(filename_test, "r")) {
+        fclose(file);
+        // File exists, so remove it
+        if (remove(filename_test) != 0) {
+            printf("Error deleting existing file\n");
+            return;
+        }
+    }
+    // Create new file
+    FILE* file = fopen(filename_test, "w+");
+    if (!file) {
+        printf("Error creating config file: %s\n", strerror(errno));
+        return;
+    }
+    fprintf(file, "[\n");
+    display_loading_screen("Record Key Sequence..");
+    while (count < SAMPLE){        
+        if (file != NULL) {
+            fprintf(file, "    {\"x\": %ld, \"y\": %ld, \"z\": %ld}", gd.avg_x, gd.avg_y, gd.avg_z);
+            printf("RECORDING TEST Sequence %d: X=%ld, Y=%ld, Z=%ld\n", count, gd.avg_x, gd.avg_y, gd.avg_z);
+            if (count != SAMPLE-1) {  // Add a comma except for the last item
+                fprintf(file, ",");
+            }
+            count++;
+        } else {
+            printf("Error writing in file: %s\n", strerror(errno));
+        }
+        ThisThread::sleep_for(10ms);
+    }
+    fprintf(file, "\n]");
+    fclose(file);
+    
+    // for (int i = 0; i < SAMPLE; i++) {
+    //     printf("Point %d: X=%d, Y=%d, Z=%d\n", 
+    //     i, gd_saved.avg_x[i], gd_saved.avg_y[i], gd_saved.avg_z[i]);
+    // }
+    display_snowman("Recorded!,Unlock Now..");
+
+    if (1==get_match()){
+        display_christmas_tree("UNLOCK PASSED", "Merry Christmas");
+    } else {
+        display_christmas_tree("UNLOCK FAILED", "Goodluck next time");
+    }
+
+    return;
 }
 
 
@@ -186,6 +307,7 @@ void button_press_unlock_handler() {
 }
 
 void record_data_task() {
+    display_loading_screen("Record Key Sequence..");
     // Perform file operations and data recording here
     int count=0;
     // Check if file exists
@@ -204,11 +326,11 @@ void record_data_task() {
         return;
     }
     fprintf(file, "[\n");
-    display_loading_screen("Gesture Recording..");
+
     while (count < SAMPLE){        
         if (file != NULL) {
             fprintf(file, "    {\"x\": %ld, \"y\": %ld, \"z\": %ld}", gd.avg_x, gd.avg_y, gd.avg_z);
-            printf("Recording Point %d: X=%ld, Y=%ld, Z=%ld\n", count, gd.avg_x, gd.avg_y, gd.avg_z);
+            printf("RECORDING KEY SEQUENCE %d: X=%ld, Y=%ld, Z=%ld\n", count, gd.avg_x, gd.avg_y, gd.avg_z);
             if (count != SAMPLE-1) {  // Add a comma except for the last item
                 fprintf(file, ",");
             }
@@ -220,12 +342,11 @@ void record_data_task() {
     }
     fprintf(file, "\n]");
     fclose(file);
-    read_gesture_data(filename);
     
-    for (int i = 0; i < SAMPLE; i++) {
-        printf("Point %d: X=%d, Y=%d, Z=%d\n", 
-        i, gd_saved.avg_x[i], gd_saved.avg_y[i], gd_saved.avg_z[i]);
-    }
+    // for (int i = 0; i < SAMPLE; i++) {
+    //     printf("Point %d: X=%d, Y=%d, Z=%d\n", 
+    //     i, gd_saved.avg_x[i], gd_saved.avg_y[i], gd_saved.avg_z[i]);
+    // }
     display_snowman("Recorded!,Unlock Now..");
 
     button.rise(&button_press_unlock_handler); // unlock button

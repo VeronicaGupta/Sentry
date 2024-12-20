@@ -20,5 +20,6 @@ DigitalOut stop_record_led_indicator(LED2);
 EventFlags flags;
 
 const char* filename = "/fs/gyro_data.json";
+const char* filename_test = "/fs/gyro_data_test.json";
 
 #endif
