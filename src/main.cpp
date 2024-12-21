@@ -6,6 +6,7 @@
 #include "FATfilesystem.h"
 #include "LittleFileSystem.h"
 #include "BlockDevice.h"
+#include "recognition.h"
 
 BufferedSerial pc(USBTX, USBRX, 9600);  // TX, RX, initial baud rate (default 9600)
 
@@ -233,8 +234,8 @@ void button_press_record_handler() {
 }
 
 int get_match(){
-    read_gesture_record_data();
-    read_gesture_test_data();
+    read_gesture_record_data(); //gd_saved
+    read_gesture_test_data(); //gd_test
 
     ThisThread::sleep_for(2s);
 
@@ -242,9 +243,26 @@ int get_match(){
 
     ThisThread::sleep_for(2s);
 
-    // Add reconition code here
+    // ADD RECOGNITION CODE HERE
+    uint32_t dtw_x = 0, dtw_y = 0, dtw_z= 0;
 
-    return 1;
+    //comparing x arrays
+    dtw_x = dtw_cost(gd_saved.avg_x, gd_test.avg_x);
+    //comparing y arrays 
+    dtw_y = dtw_cost(gd_saved.avg_y, gd_test.avg_y);
+    //comparing z arrays
+    dtw_z = dtw_cost(gd_saved.avg_z, gd_test.avg_z);
+
+    //all dtw costs are now collected
+    //compare each of the costs, if they are each less than the THRESHOLD then good.
+    if(dtw_x < THRESHOLD){
+        if(dtw_y < THRESHOLD){
+            if(dtw_z < THRESHOLD){
+                return 1;
+            }
+        }
+    }
+    return 0; //if matching it is one else 0
 
 }
 

@@ -1,13 +1,8 @@
-#include "stdint.h"
-#include "mbed.h"
-
-#define SET_SIZE 10
-
+#include "recognition.h"
 //--------------------------FUNCTIONS AND THRESHOLD--------------------------------------
-#define THRESHOLD 500000
 //this function finds the minimum between three values since no min function in C
 //parameters are the three values from the matrix
-uint32_t find_min(uint32_t v1, uint32_t v2, uint32_t v3){
+uint32_t find_min(uint16_t v1, uint16_t v2, uint16_t v3){
     uint32_t minimum = (v1 < v2) ? ((v1 < v3) ? v1 : v3) : ((v2 < v3) ? v2 : v3); 
     return minimum;
 }
