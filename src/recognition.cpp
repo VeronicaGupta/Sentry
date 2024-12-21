@@ -2,7 +2,7 @@
 //--------------------------FUNCTIONS AND THRESHOLD--------------------------------------
 //this function finds the minimum between three values since no min function in C
 //parameters are the three values from the matrix
-uint32_t find_min(uint16_t v1, uint16_t v2, uint16_t v3){
+uint32_t find_min(uint32_t v1, uint32_t v2, uint32_t v3){
     uint32_t minimum = (v1 < v2) ? ((v1 < v3) ? v1 : v3) : ((v2 < v3) ? v2 : v3); 
     return minimum;
 }
@@ -11,7 +11,7 @@ uint32_t find_min(uint16_t v1, uint16_t v2, uint16_t v3){
 //parameters are the two data sets. 
 //this function does not utuilize sakoe and chiba dtw shortcut, it is the original calculation for dtw
 //threshold for this project is 400,000 for medium to slow gestures
-uint32_t dtw_cost(int16_t (&set_one)[SET_SIZE], int16_t (&set_two)[SET_SIZE]){
+uint32_t dtw_cost(int32_t *set_one, int32_t *set_two){
     uint32_t dtw_mat[SET_SIZE][SET_SIZE] = {0}; //initialize matrix
     //----------------calculation of matrix------------------------
     uint32_t cost = 0;
@@ -71,7 +71,7 @@ uint32_t dtw_cost(int16_t (&set_one)[SET_SIZE], int16_t (&set_two)[SET_SIZE]){
     //matrix has been printed for testing!
     for(i = SET_SIZE-1; i >=0; i--){
         for(int j = 0; j < SET_SIZE; j++){
-            printf("%lu ", dtw_mat[i][j]);
+            // printf("%lu ", dtw_mat[i][j]);
         }
         printf("\n");
     }

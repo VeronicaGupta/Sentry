@@ -1,6 +1,5 @@
 #include <mbed.h>
 #include "gyro.h"
-#include "filter.h"
 #include "spi_config.h"
 #include "lcd_out.h"
 #include "FATfilesystem.h"
@@ -10,6 +9,7 @@
 
 BufferedSerial pc(USBTX, USBRX, 9600);  // TX, RX, initial baud rate (default 9600)
 
+bool Debugs = false;
 // Create a block device and filesystem instance
 BlockDevice *bd = BlockDevice::get_default_instance();
 LittleFileSystem fs("fs");
@@ -51,11 +51,11 @@ void gyro_register_config(){
     write_buf[1] = 0xFF;
 }
 
-void print_sensor_data(int16_t x, int16_t y, int16_t z){
-    printf(">X axis-> gx: %d|g\n", x);
-    printf(">Y axis-> gy: %d|g\n", y);
-    printf(">Z axis-> gz: %d|g\n", z);
-    printf("----------------\n");
+void print_sensor_data(int32_t x, int32_t y, int32_t z){
+    printf(">X axis-> gx: %ld|g\n", x);
+    printf(">Y axis-> gy: %ld|g\n", y);
+    printf(">Z axis-> gz: %ld|g\n", z);
+    // printf("----------------\n");
 }
 
 void gyro_filtering(){
@@ -107,7 +107,7 @@ void gyro_get_data(){
 
     gyro_filtering();
 
-    // print_sensor_data(gd.avg_x, gd.avg_y, gd.avg_z);
+    print_sensor_data(gd.avg_x, gd.avg_y, gd.avg_z);
 
 }
 
@@ -152,7 +152,8 @@ void read_gesture_record_data() {
             gd_saved.avg_x[i] = x;
             gd_saved.avg_y[i] = y;
             gd_saved.avg_z[i] = z;
-
+            
+            if (Debugs)
             printf("KEY Parsed Sequence %d: X=%d, Y=%d, Z=%d\n", i, gd_saved.avg_x[i], gd_saved.avg_y[i], gd_saved.avg_z[i]);
 
             // Move pointer forward to the next data point
@@ -209,6 +210,7 @@ void read_gesture_test_data() {
             gd_test.avg_y[i] = y;
             gd_test.avg_z[i] = z;
 
+            if (Debugs)
             printf("TEST Parsed Point %d: X=%d, Y=%d, Z=%d\n", i, gd_test.avg_x[i], gd_test.avg_y[i], gd_test.avg_z[i]);
 
             // Move pointer forward to the next data point
@@ -258,10 +260,13 @@ int get_match(){
     if(dtw_x < THRESHOLD){
         if(dtw_y < THRESHOLD){
             if(dtw_z < THRESHOLD){
+                printf("Cost for gestures: X=%lld, Y=%lld, Z=%lld\n", dtw_x, dtw_y, dtw_z);
                 return 1;
             }
         }
     }
+    printf("Cost for gestures: X=%lld, Y=%lld, Z=%lld\n", dtw_x, dtw_y, dtw_z);
+    
     return 0; //if matching it is one else 0
 
 }
@@ -291,6 +296,7 @@ void unlock_data_task(){
     while (count < SAMPLE){        
         if (file != NULL) {
             fprintf(file, "    {\"x\": %ld, \"y\": %ld, \"z\": %ld}", gd.avg_x, gd.avg_y, gd.avg_z);
+            if (Debugs)
             printf("RECORDING TEST Sequence %d: X=%ld, Y=%ld, Z=%ld\n", count, gd.avg_x, gd.avg_y, gd.avg_z);
             if (count != SAMPLE-1) {  // Add a comma except for the last item
                 fprintf(file, ",");
@@ -311,9 +317,9 @@ void unlock_data_task(){
     display_snowman("Recorded!,Unlock Now..");
 
     if (1==get_match()){
-        display_christmas_tree("UNLOCK PASSED", "Merry Christmas");
+        display_christmas_tree("UNLOCK PASSED!", "Merry Christmas!");
     } else {
-        display_christmas_tree("UNLOCK FAILED", "Goodluck next time");
+        display_christmas_tree("UNLOCK FAILED : /", "Goodluck next time");
     }
 
     return;
@@ -348,6 +354,7 @@ void record_data_task() {
     while (count < SAMPLE){        
         if (file != NULL) {
             fprintf(file, "    {\"x\": %ld, \"y\": %ld, \"z\": %ld}", gd.avg_x, gd.avg_y, gd.avg_z);
+            if (Debugs)
             printf("RECORDING KEY SEQUENCE %d: X=%ld, Y=%ld, Z=%ld\n", count, gd.avg_x, gd.avg_y, gd.avg_z);
             if (count != SAMPLE-1) {  // Add a comma except for the last item
                 fprintf(file, ",");

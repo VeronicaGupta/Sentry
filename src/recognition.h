@@ -3,9 +3,9 @@
 #include "stdint.h"
 #include "mbed.h"
 
-#define SET_SIZE 10
+#define SET_SIZE 30
 #define THRESHOLD 500000
 
-uint32_t dtw_cost(int16_t (&set_one)[SET_SIZE], int16_t (&set_two)[SET_SIZE]);
+uint32_t dtw_cost(int32_t *set_one, int32_t *set_two);
 
 #endif
