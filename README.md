@@ -15,9 +15,9 @@ The **Sentry** is a gesture-based lock/unlock system that utilizes the IMU (Iner
 - **Recognition**: Uses Dynamic time warping (DTW) algorithm to detect the matching rate of the gestures.
 
 ### **System Design Flow**:
-- **Gesture recording**: Users record a secret sequence gesture using a "Record Key."
-- **Gesture recording**: Users record a new sequence gesture using a "Record Key."
-- **Gesture matching**: Algo matches the secreta and new sequence gesture to Unlock if success and remains locked if does not matches.
+- **Secret gesture recording**: User record a "secret" sequence gesture using a "Record Key."
+- **New gesture recording**: User record a "new" sequence gesture using a "Record Key."
+- **Gesture matching**: Algo matches the secret and new sequence gesture to "Unlock" if success and remains "Locked" if does not matches.
 
 ---
 
