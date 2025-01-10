@@ -1,16 +1,23 @@
-## **Embedded Sentry**
+## **Sentry**
 
 ### **Youtube Link**
 https://youtube.com/shorts/s6QqmGTkBAY?si=GU7sCO6Fnp7VEv-T
 
 ### **Overview**
-The **Embedded Sentry** is a gesture-based lock/unlock system that utilizes the IMU (Inertial Measurement Unit) of an STM32F429ZI development board. It leverages hand movements recorded via an accelerometer and/or gyroscope to define a unique gesture sequence for unlocking resources.
+The **Sentry** is a gesture-based lock/unlock system that utilizes the IMU (Inertial Measurement Unit) of an STM32F429ZI development board. It leverages hand movements recorded via a gyroscope to define a unique gesture sequence for unlocking resources.
 
-The system provides:
-- **Gesture recording**: Users record a gesture using a "Record Key."
-- **Gesture matching**: Users replicate the gesture to unlock the resource.
-- **Visual feedback**: Success and failure indicators via LEDs.
-- **File-based storage**: Gesture data is saved to the device for persistence.
+### **Architecture**:
+- **System pattern flow**: Uses queue and button interrupt events for saving/recording gestures.
+- **Collection**: Uses in-build gyro sensor via spi communication interrupts for collecting x, y, z axis data.
+- **Filtering**: Uses Moving Average FIR (Finite Impulse Response) window filtering for processing axis raw data.
+- **Fetching**: Code saves/load a gesture in a file on dev board flash when required to record/match.
+- **Screens**: Uses in-built lcd driver for three types of visual feedback: success, failure and loading.
+- **Recognition**: Uses Dynamic time warping (DTW) algorithm to detect the matching rate of the gestures.
+
+### **System Design Flow**:
+- **Gesture recording**: Users record a secret sequence gesture using a "Record Key."
+- **Gesture recording**: Users record a new sequence gesture using a "Record Key."
+- **Gesture matching**: Algo matches the secreta and new sequence gesture to Unlock if success and remains locked if does not matches.
 
 ---
 
