@@ -1,5 +1,8 @@
 ## **Embedded Sentry**
 
+### **Youtube Link**
+https://youtube.com/shorts/s6QqmGTkBAY?si=GU7sCO6Fnp7VEv-T
+
 ### **Overview**
 The **Embedded Sentry** is a gesture-based lock/unlock system that utilizes the IMU (Inertial Measurement Unit) of an STM32F429ZI development board. It leverages hand movements recorded via an accelerometer and/or gyroscope to define a unique gesture sequence for unlocking resources.
 
