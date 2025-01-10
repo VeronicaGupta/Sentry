@@ -4,8 +4,8 @@
 The **Sentry** is a gesture-based lock/unlock system that utilizes the IMU (Inertial Measurement Unit) of an STM32F429ZI development board. It leverages hand movements recorded via a gyroscope to define a unique gesture sequence for unlocking resources.
 
 ### **Demo Video**
-Link- https://youtube.com/shorts/s6QqmGTkBAY?si=GU7sCO6Fnp7VEv-T
-- Ensure the project includes a demonstration video showcasing:
+Link: https://youtube.com/shorts/s6QqmGTkBAY?si=GU7sCO6Fnp7VEv-T
+Challenge demonstration includes:
   1. Gesture recording.
   2. Gesture testing and unlock.
   3. Deleting gestures.
