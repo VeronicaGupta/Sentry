@@ -93,7 +93,7 @@ Challenge demonstration includes:
    - Build and upload the code using the **PlatformIO Build** and **Upload** buttons.
 
 5. Launch **Teleplot** for live data visualization:
-   - Configure Teleplot to connect to the serial COM port at `115200` baud.
+   - Configure Teleplot to connect to the serial COM port at `9600` baud.
 
 ---
 
